@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, DateTime, VARCHAR, Enum, DECIMAL, ForeignKey
+from sqlalchemy import Column, Integer, DateTime, VARCHAR, Enum, DECIMAL, ForeignKey, PrimaryKeyConstraint, UniqueConstraint
   
 Base = declarative_base() 
 
@@ -28,7 +28,6 @@ class Rates(Base):
 
 class Invoices(Base):
 
-    __table_args__ = {'schema': 'testsh'}
     __tablename__ = 'invoices'
 
     id = Column(Integer, primary_key=True)
@@ -37,6 +36,8 @@ class Invoices(Base):
     invoice_number = Column(VARCHAR(128))
     status = Column(Enum('UNPAID', 'PAID', 'VOIDED'))
     amount = Column(DECIMAL(9,2))
+
+    __table_args__ = (PrimaryKeyConstraint("id", name="id_pk"), UniqueConstraint('account_id', 'issued_at', name='unique_invoice'), {'schema': 'testsh'})
 
 class InvoiceItems(Base):
 

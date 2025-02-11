@@ -13,7 +13,7 @@ class dbInstance:
             # logger.error("Error connecting to database:\n" + e)
             raise e
 
-    def _insertInvoice(self, account_id:int, shipments_amounts:dict, invoice_status:str='UNPAID'):
+    def _insertInvoice(self, account_id:int, issued_at:datetime, shipments_amounts:dict, invoice_status:str='UNPAID'):
         Session = sessionmaker(bind=self.engine)
         session = Session()
         last_id = session.query(Invoices.id).order_by(Invoices.id.desc()).first()
@@ -22,7 +22,7 @@ class dbInstance:
 
         new_invoice = Invoices(
             account_id=account_id,
-            issued_at=func.now(),
+            issued_at=issued_at,
             invoice_number="",
             status=invoice_status,
             amount=sum(shipments_amounts.values())
@@ -51,9 +51,10 @@ class dbInstance:
     def charge_customer(self, account_id:int, date:str, status:str=None):
 
         # Get the first and last day of the billable period (previous month)
-        date = datetime.strptime(date, '%Y-%m-%d')
-        start_date = (date - timedelta(days=1)).replace(day=1)
-        end_date = (date.replace(day=1) - timedelta(days=1))
+        date_exec = datetime.strptime(date, '%Y-%m-%d')
+        issued_at = date_exec.replace(day=1)
+        start_date = (date_exec - timedelta(days=1)).replace(day=1)
+        end_date = (date_exec.replace(day=1) - timedelta(days=1))
 
         Session = sessionmaker(bind=self.engine)
         session = Session()
@@ -87,5 +88,5 @@ class dbInstance:
         shipments_amounts = {shipment_type: quantity * shipments_rates[shipment_type] for shipment_type, quantity in shipments_quantity.items()}
 
         # TODO: Add control to avoid duplicates
-        invoice_id = self._insertInvoice(account_id, shipments_amounts, status)
+        invoice_id = self._insertInvoice(account_id, issued_at, shipments_amounts, status)
         self._insertInvoiceItems(invoice_id, shipments_by_day, shipments_rates)
