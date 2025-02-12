@@ -23,9 +23,9 @@ if __name__ == '__main__':
     if job == '-charge':
         # I thought on using Year and Month as if the user enter bothe inputs
         # TODO: Automate? - Could use first laborable day of the month
-        account_id = 2 or int(input("Enter the account id: ")) # Should be taken from current user
-        year_input = 2025 or int(input("Enter the year: "))
-        month_input = 1 or int(input("Enter the month: "))
+        account_id = int(input("Enter the account id: ")) # 2 - Should be taken from current user
+        year_input = int(input("Enter the year: ")) # 2025
+        month_input = int(input("Enter the month: ")) # 1
 
         logger.info("Creating invoice for {0}-{1}. Account Id # {2}".format(year_input, month_input, account_id))
 
@@ -33,7 +33,8 @@ if __name__ == '__main__':
     
     if job == '-reprocess':
         # I thought on using Invoice Number and Dry Run as if the user enter the input
-        invoice_number = 'SH-2-24' or input("Enter the invoice number: ")
+        invoice_number = input("Enter the invoice number: ") # 'SH-1-1'
+        account_id = int(input("Enter the account id: ")) # invoice_number.split('-')[1] - Should be taken from current user
         dry_run = input("Dry run? (y/n): ").lower()
         if dry_run == 'y':
             message = "Dry run mode enabled."
@@ -44,9 +45,6 @@ if __name__ == '__main__':
         else:
             logger.error("Invalid input. Exiting...")
             sys.exit(1)
-        account_id = invoice_number.split('-')[1] or int(input("Enter the account id: ")) # Should be taken from current user
         
         logger.info("Reprocessing invoice {0}.\nAccount Id # {1}\n{2}".format(invoice_number, account_id, message))
-        dbInstance.reprocess_invoice(account_id=account_id, invoice_number=invoice_number, dry_run=dry_run)
-
-    # TODO: Exception management.
+        reprocess = dbInstance.reprocess_invoice(account_id=account_id, invoice_number=invoice_number, dry_run=dry_run)
