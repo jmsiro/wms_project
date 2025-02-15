@@ -54,8 +54,8 @@ class CliHandler():
                                                  help="Recalculates an invoice to reflect its new value. Use the dry-run flag to preview changes without saving to the database.")
         reprocess_parser.add_argument("-i", "--invoice", required=True, type=str, 
                                       help="Invoice number to reprocess.", dest="invoice")
-        reprocess_parser.add_argument("-dr", "--dry-run", choices=[True, False], default=True, required=False, type=bool, 
-                                      help="Dry Run (optional, defaults to True): Set to False to save the new value to the database.", dest="dry_run")
+        reprocess_parser.add_argument("-dr", "--dry-run", required=False, default=False, action="store_true",
+                                      help="Dry Run: Use this flag to preview changes without saving them.", dest="dry_run")
 
         args = parser.parse_args()
         result = vars(args)
