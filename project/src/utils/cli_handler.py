@@ -34,8 +34,8 @@ class CliHandler():
                 ► python main.py charge                         >>>> Create invoice for every account for previous month.\n\
                 ► python main.py charge -a 1                    >>>> Create invoice for account 1 for previous month.\n\
                 ► python main.py charge -a 1 -y 2025 -m 1       >>>> Create invoice for account 1 for January 2025.\n\
-                ► python main.py reprocess -i SH-1-1            >>>> Reprocess invoice SH-1-1 in dry run mode.\n\
-                ► python main.py reprocess -i SH-1-1 -dr False  >>>> Reprocess invoice SH-1-1 and commit changes.")
+                ► python main.py reprocess -i SH-1-1 -dr        >>>> Reprocess invoice SH-1-1 in dry run mode.\n\
+                ► python main.py reprocess -i SH-1-1            >>>> Reprocess invoice SH-1-1 and commit changes.")
         
         subparsers = parser.add_subparsers(dest="job", required=True, help="Available jobs")
 
