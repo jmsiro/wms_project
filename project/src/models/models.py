@@ -5,16 +5,14 @@ Base = declarative_base()
 
 class Accounts(Base):
     
-    __table_args__ = {'schema': 'testsh'}
     __tablename__ = 'accounts'
 
     id = Column(Integer, primary_key=True)
-    name = Column(VARCHAR(45))
+    account_name = Column(VARCHAR(45))
     created_at = Column(DateTime)
 
 class Shipments(Base):
 
-    __table_args__ = {'schema': 'testsh'}
     __tablename__ = 'shipments'
 
     id = Column(Integer, primary_key=True)
@@ -25,7 +23,6 @@ class Shipments(Base):
 
 class Rates(Base):
 
-    __table_args__ = {'schema': 'testsh'}
     __tablename__ = 'rates'
 
     id = Column(Integer, primary_key=True)
@@ -46,11 +43,10 @@ class Invoices(Base):
     status = Column(Enum('UNPAID', 'PAID', 'VOIDED'))
     amount = Column(DECIMAL(9,2))
 
-    __table_args__ = (PrimaryKeyConstraint("id", name="id_pk"), UniqueConstraint('account_id', 'issued_at', name='unique_invoice'), {'schema': 'testsh'})
+    __table_args__ = (PrimaryKeyConstraint("id", name="id_pk"), UniqueConstraint('account_id', 'issued_at', name='unique_invoice'))
 
 class InvoiceItems(Base):
 
-    __table_args__ = {'schema': 'testsh'}
     __tablename__ = 'invoice_items'
 
     id = Column(Integer, primary_key=True)

@@ -61,6 +61,13 @@ class BillingService:
         """
         if not self.test:
             session = self.db.get_savepoint_session()
+        
+        if not self.db.account_exists(account_id, session):
+            logger.error(f"Account Id # {account_id} not found")
+            if not self.test:
+                self.db.close_connection()
+            self.db.close_session(session)
+            return {"data": None, "message": "Account not found"}
 
         # Get the first and last day of the billable period using year and month 
         start_date = datetime.strptime("{year}-{month}-01".format(year=year, month=month), "%Y-%m-%d")
@@ -89,6 +96,7 @@ class BillingService:
             if not self.test:
                 self.db.rollback_savepoint()
             return invoice_data
+        
         try:
             invoice_items = self._insert_invoice_items(invoice_data["data"]["id"], shipments_by_day, shipments_rates, session)
             self.db.commit_changes(session)

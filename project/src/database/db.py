@@ -55,6 +55,10 @@ class DbInstance:
         else:
             session.commit()
     
+    def account_exists(self, account_id:int, session:sessionmaker) -> Accounts:
+        account = session.query(Accounts).filter(Accounts.id == account_id).first() is not None
+        return account
+    
     def get_shipments_quantity(self, account_id:int, start_date:datetime, end_date:datetime, session:sessionmaker) -> dict:
         national_shipments = session.query(Shipments.country)\
             .filter(Shipments.account_id == account_id,
