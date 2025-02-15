@@ -1,50 +1,36 @@
 import os
-import sys
-import configparser
 from src.logs.logs import initialize, logger
 from src.database import db
+from src.utils.cli_handler import CliHandler
+from src.services.billing import BillingService
+from src.services.reprocess import BillReprocessor
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    LOGS_LEVEL = 'INFO'
+    LOGS_LEVEL = "INFO"
     initialize(LOGS_LEVEL)
     logger = logger.getLogger("MAIN")
-    logger.info("Starting...")
-
-    config_file = 'config.ini'
-    config = configparser.ConfigParser()
-    config.read(os.path.join(os.path.dirname(__file__), config_file))
-
-    job = sys.argv[1].lower()
-
-    DBDATA = {k:v for k,v in config['DATABASE'].items()}
-    dbInstance = db.dbInstance(DBDATA)
-
-    if job == '-charge':
-        # I thought on using Year and Month as if the user enter bothe inputs
-        # TODO: Automate? - Could use first laborable day of the month
-        account_id = int(input("Enter the account id: ")) # 2 - Should be taken from current user
-        year_input = int(input("Enter the year: ")) # 2025
-        month_input = int(input("Enter the month: ")) # 1
-
-        logger.info("Creating invoice for {0}-{1}. Account Id # {2}".format(year_input, month_input, account_id))
-
-        invoice_data = dbInstance.charge_customer(account_id=account_id, year=year_input, month=month_input, status='UNPAID')
+    logger.info("Billing System Starting...")
     
-    if job == '-reprocess':
-        # I thought on using Invoice Number and Dry Run as if the user enter the input
-        invoice_number = input("Enter the invoice number: ") # 'SH-1-1'
-        account_id = int(input("Enter the account id: ")) # invoice_number.split('-')[1] - Should be taken from current user
-        dry_run = input("Dry run? (y/n): ").lower()
-        if dry_run == 'y':
-            message = "Dry run mode enabled."
-            dry_run = True
-        elif dry_run == 'n':
-            message = "Dry run mode disabled."
-            dry_run = False
+    connection_string = os.environ["CONN"]
+    db_instance = db.DbInstance(connection_string)
+
+    args = CliHandler().get_args()
+    if args["job"] == "charge":
+        billing = BillingService(db_instance)
+        account, year, month, status = args["account"], args["year"], args["month"], args["status"]
+        # If no account is specified, bill all
+        if account:
+            logger.info(f"Creating invoice for Account ID #{account} for period {year}-{month}")
+            billing.charge_customer(account_id=account, year=year, month=month, status=status)
         else:
-            logger.error("Invalid input. Exiting...")
-            sys.exit(1)
-        
-        logger.info("Reprocessing invoice {0}.\nAccount Id # {1}\n{2}".format(invoice_number, account_id, message))
-        reprocess = dbInstance.reprocess_invoice(account_id=account_id, invoice_number=invoice_number, dry_run=dry_run)
+            logger.info(f"Creating invoices for all accounts for period {year}-{month}")
+            billing.charge_all(year=year, month=month)
+    
+    if args["job"] == 'reprocess':
+        reprocessor = BillReprocessor(db_instance)
+        account, invoice, dry_run = args["account"], args["invoice"], args["dry_run"]
+        msg = "Dry Run" if dry_run else "Commit changes"
+        logger.info(f"Reprocessing invoice {invoice}.\nAccount Id # {account}\nMode: {msg}")
+
+        reprocessed = reprocessor.reprocess_invoice(account_id=account, invoice_number=invoice, dry_run=dry_run)
