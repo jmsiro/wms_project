@@ -1,3 +1,16 @@
+create table accounts
+(
+    id                                 int auto_increment            primary key,
+    account_name                       varchar(45)                   not null,
+    created_at                         datetime                      not null
+)
+    charset = utf8mb3;
+
+insert into accounts (account_name, created_at) values
+('Juan','2025-01-01T09:00:00'),
+('Maria','2025-01-01T09:00:00'),
+('Pedro','2025-01-01T09:00:00');
+
 create table shipments
 (
     id                                 int auto_increment            primary key,
@@ -150,7 +163,7 @@ create table invoices
 )
     charset = utf8mb3;
 
-alter table invoices add unique `unique_invoice`(account_id, issued_at);
+ALTER TABLE invoices ADD UNIQUE `unique_invoice`(account_id, issued_at);
 
 insert into invoices (account_id, issued_at, invoice_number, status, amount) values
 (1, '2025-02-01 00:00:00', 'SH-1-1', 'UNPAID', 700.00);
@@ -166,7 +179,7 @@ create table invoice_items
 )
     charset = utf8mb3;
     
-insert into invoice_items (invoice_id, description, quantity, unit_price, amount) values
+INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, amount) VALUES
 (1, 'National shipments of 2025-01-01', 1, 5.0, 5.0),
 (1, 'International shipment of 2025-01-01', 1, 20.0, 20.0),
 (1, 'National shipments of 2025-01-05', 2, 5.0, 10.0),
