@@ -1,7 +1,6 @@
 import os
 import sys
 import unittest
-import configparser
 from pathlib import Path
 from unittest import mock
 from datetime import datetime, timedelta
@@ -13,15 +12,12 @@ SCRIPT_DIR = os.path.join(PATH,"src")
 if SCRIPT_DIR not in sys.path:
     sys.path.append(os.path.dirname(SCRIPT_DIR))
 from src.database import db
+from src.services.billing import BillingService
+from src.services.reprocess import BillReprocessor
 
 Session = sessionmaker()
-
-config_file = "config.ini"
-config = configparser.ConfigParser()
-config.read(os.path.join(PATH, config_file))
-DBDATA = {k:v for k,v in config["DATABASE"].items()}
-
-engine = create_engine("mysql+pymysql://{0}:{1}@{2}:{3}/{4}".format(DBDATA["user"], DBDATA["password"], DBDATA["host"], DBDATA["port"], DBDATA["database"]))
+engine = create_engine(os.environ["CONN"])
+db_instance = db.DbInstance(test=True)
 
 class TestChargeCustomer(unittest.TestCase):
     def setUp(self):
@@ -35,16 +31,16 @@ class TestChargeCustomer(unittest.TestCase):
 
     def testNoShipments(self):
         """No shipments"""
-        self.assertEqual(db.dbInstance().charge_customer(account_id=2, year=2024, month=1, status="PAID", session=self.session)["data"], None)
+        self.assertEqual(BillingService(db_instance, True).charge_customer(account_id=2, year=2024, month=1, status="PAID", session=self.session)["data"], None)
     
     def testNoAccount(self):
         """No account"""
-        self.assertEqual(db.dbInstance().charge_customer(account_id=5, year=2025, month=1, status="PAID", session=self.session)["data"], None)
+        self.assertEqual(BillingService(db_instance, True).charge_customer(account_id=5, year=2025, month=1, status="PAID", session=self.session)["data"], None)
         self.session.commit()
 
     def testDuplicateInvoice(self):
         """Duplicated invoice"""
-        self.assertEqual(db.dbInstance().charge_customer(account_id=1, year=2025, month=1, status="UNPAID", session=self.session)["message"], "Invoice already exists")
+        self.assertEqual(BillingService(db_instance, True).charge_customer(account_id=1, year=2025, month=1, status="UNPAID", session=self.session)["message"], "Invoice already exists")
         self.session.commit()
 
     def testReturnedData(self):
@@ -52,7 +48,7 @@ class TestChargeCustomer(unittest.TestCase):
         account = 2
         year = 2025
         month = 1
-        result = db.dbInstance().charge_customer(account_id=account, year=year, month=month, status="PAID", session=self.session)["data"]
+        result = BillingService(db_instance, True).charge_customer(account_id=account, year=year, month=month, status="PAID", session=self.session)["data"]
         with self.subTest():
             """Result is dict"""
             self.assertIsInstance(result, dict)
@@ -113,47 +109,28 @@ class TestReprocessInvoice(unittest.TestCase):
 
     def testNoInvoice(self):
         """No invoice"""
-        self.assertEqual(db.dbInstance().reprocess_invoice(account_id=1, invoice_number="LVK-1-1", dry_run=True, session=self.session)["message"], "Invoice not found")
+        self.assertEqual(BillReprocessor(db_instance, True).reprocess_invoice(account_id=1, invoice_number="LVK-1-1", dry_run=True, session=self.session)["message"], "Invoice not found")
     
     def testNoAccount(self):
         """No account"""
-        self.assertEqual(db.dbInstance().reprocess_invoice(account_id=50, invoice_number="SH-1-1", session=self.session)["data"], None)
+        self.assertEqual(BillReprocessor(db_instance, True).reprocess_invoice(account_id=50, invoice_number="SH-1-1", session=self.session)["data"], None)
 
     def testDryRun(self):
         """Dry run"""
         with self.subTest():
             """Dry run mode enabled"""
-            self.assertEqual(db.dbInstance().reprocess_invoice(account_id=1, invoice_number="SH-1-1", dry_run=True, session=self.session)["data"]["updated"], False)
+            self.assertEqual(BillReprocessor(db_instance, True).reprocess_invoice(account_id=1, invoice_number="SH-1-1", dry_run=True, session=self.session)["data"]["updated"], False)
         with self.subTest():
             """Default dry run mode"""
-            self.assertEqual(db.dbInstance().reprocess_invoice(account_id=1, invoice_number="SH-1-1", session=self.session)["data"]["updated"], False)
+            self.assertEqual(BillReprocessor(db_instance, True).reprocess_invoice(account_id=1, invoice_number="SH-1-1", session=self.session)["data"]["updated"], False)
 
     def testUpdateData(self):
         """Update data"""
-        # Was not able to update the rates data and use it in the testing. Had to update the rates data manually.
-        
-        # rates = self.session.query(db.Rates).filter(db.Rates.account_id == 1).all()
-        # for rate in rates:
-        #     if rate.shipment_type == "NATIONAL":
-        #         rate.price = 10
-        #     elif rate.shipment_type == "INTERNATIONAL":
-        #         rate.price = 20
-        # self.session.commit()
-
-        # Patch user input when asked if wants to update the data of the invoice
-        with mock.patch("builtins.input", return_value="n"):
-            result = db.dbInstance().reprocess_invoice(account_id=1, invoice_number="SH-1-1", dry_run=False, session=self.session)['data']
-            if result["difference"] > 0:
-                self.assertEqual(result["updated"], False)
-            elif result["difference"] == 0:
-                self.assertEqual(result["updated"], False)
-        
-        with mock.patch("builtins.input", return_value="y"):
-            result = db.dbInstance().reprocess_invoice(account_id=1, invoice_number="SH-1-1", dry_run=False, session=self.session)['data']
-            if result["difference"] > 0:
-                self.assertEqual(result["updated"], True)
-            elif result["difference"] == 0:
-                self.assertEqual(result["updated"], False)
+        result = BillReprocessor(db_instance, True).reprocess_invoice(account_id=1, invoice_number="SH-1-1", dry_run=False, session=self.session)['data']
+        if result["difference"] > 0:
+            self.assertEqual(result["updated"], True)
+        elif result["difference"] == 0:
+            self.assertEqual(result["updated"], False)
 
     def tearDown(self):
         self.session.close()

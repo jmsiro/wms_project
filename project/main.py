@@ -34,3 +34,8 @@ if __name__ == "__main__":
         logger.info(f"Reprocessing invoice {invoice}.\nAccount Id # {account}\nMode: {msg}")
 
         reprocessed = reprocessor.reprocess_invoice(account_id=account, invoice_number=invoice, dry_run=dry_run)
+
+    if args["job"] == 'test':
+        logger.info("Running tests...")
+        
+        logger.info("Tests finished")

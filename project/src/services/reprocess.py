@@ -49,14 +49,13 @@ class BillReprocessor:
         """
         if not self.test:
             session = self.db.get_session()
-
-        # TODO: Previous query to check if account exists? Need table.        
-        # Get the invoice to reprocess
+       
+        #  Check if account exists
         if not self.db.account_exists(account_id, session):
             logger.error(f"Account Id # {account_id} not found")
             self.db.close_session(session)
             return {"data": None, "message": "Account not found"}
-
+        # Get the invoice to reprocess
         invoice = self.db.get_invoice(account_id, invoice_number, session)
         if invoice is None:
             logger.error(f"Invoice {invoice_number} not found for Account Id # {account_id}")

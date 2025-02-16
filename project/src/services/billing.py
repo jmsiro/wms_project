@@ -114,6 +114,7 @@ class BillingService:
         self.db.close_session(session)
         if not self.test:
             self.db.close_connection()
+        logger.info(f"Invoice created for Account Id # {account_id} with number {invoice_data['data']['invoice_number']}")
         return invoice_data
     
     def charge_all(self, year:int, month:int) -> list:

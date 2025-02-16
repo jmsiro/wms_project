@@ -27,7 +27,7 @@ class Rates(Base):
 
     id = Column(Integer, primary_key=True)
     account_id = Column(Integer)
-    shipment_type = Column(Enum('NATIONAL', 'INTERNATIONAL'))
+    shipment_type = Column(Enum("NATIONAL", "INTERNATIONAL"))
     price = Column(DECIMAL(4,2))
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
@@ -40,7 +40,7 @@ class Invoices(Base):
     account_id = Column(Integer)
     issued_at = Column(DateTime)
     invoice_number = Column(VARCHAR(128))
-    status = Column(Enum('UNPAID', 'PAID', 'VOIDED'))
+    status = Column(Enum("UNPAID", "PAID", "VOIDED"))
     amount = Column(DECIMAL(9,2))
 
     __table_args__ = (PrimaryKeyConstraint("id", name="id_pk"), UniqueConstraint('account_id', 'issued_at', name='unique_invoice'))
@@ -50,7 +50,7 @@ class InvoiceItems(Base):
     __tablename__ = 'invoice_items'
 
     id = Column(Integer, primary_key=True)
-    invoice_id = Column(Integer, ForeignKey('testsh.invoices.id'))
+    invoice_id = Column(Integer, ForeignKey('invoices.id'))
     description = Column(VARCHAR(128))
     quantity = Column(Integer)
     unit_price = Column(DECIMAL(9,2))

@@ -10,12 +10,12 @@ class CliHandler():
         pass
 
     @staticmethod
-    def get_args():
+    def get_args(test_args=None):
 
         def _verify_year(year):
             try:
                 if int(year) >= 1900:
-                    return year
+                    return int(year)
                 else:
                     raise argparse.ArgumentTypeError("Year must be 1900 or later.")
             except ValueError:
@@ -31,15 +31,15 @@ class CliHandler():
             formatter_class=argparse.RawDescriptionHelpFormatter,
             description="Charge or reprocess customers invoices.",
             epilog="Usage examples:\n\
-                ► python main.py charge                         >>>> Create invoice for every account for previous month.\n\
-                ► python main.py charge -a 1                    >>>> Create invoice for account 1 for previous month.\n\
-                ► python main.py charge -a 1 -y 2025 -m 1       >>>> Create invoice for account 1 for January 2025.\n\
-                ► python main.py reprocess -i SH-1-1 -dr        >>>> Reprocess invoice SH-1-1 in dry run mode.\n\
-                ► python main.py reprocess -i SH-1-1            >>>> Reprocess invoice SH-1-1 and commit changes.")
+                ► python main.py charge                         >>>> Generate invoices for all accounts for the last closed month.\n\
+                ► python main.py charge -a 1                    >>>> Generate an invoice for account 1 for the last closed month.\n\
+                ► python main.py charge -a 1 -y 2025 -m 1       >>>> Generate an invoice for account 1 for January 2025.\n\
+                ► python main.py reprocess -i SH-1-1 -dr        >>>> Reprocess invoice SH-1-1 in dry-run mode (preview changes without saving).\n\
+                ► python main.py reprocess -i SH-1-1            >>>> Reprocess invoice SH-1-1 and save changes.")
         
         subparsers = parser.add_subparsers(dest="job", required=True, help="Available jobs")
 
-        charge_parser = subparsers.add_parser("charge", description="Create invoices for customers", 
+        charge_parser = subparsers.add_parser("charge", description="Generate invoices for customers", 
                                               help="Creates invoices in bulk for all accounts from the last previous month or a single invoice for a specified account and date.")
         charge_parser.add_argument("-a", "--account", required=False, type=int, 
                                    help="Account Id (optional).", dest="account")
@@ -47,17 +47,20 @@ class CliHandler():
                                     help="Year (optional). Defaults to the year of the last completed month if not provided.", metavar="INT[1900-]", dest="year")
         charge_parser.add_argument("-m", "--month", required=False, default=month_input, type=int, 
                                     help="Month (optional). Defaults to the month of the last completed month if not provided.", choices=range(1,13), dest="month")
-        charge_parser.add_argument("-s", "--status", required=False, default="UNPAID", type=str,
+        charge_parser.add_argument("-s", "--status", required=False, choices=["'UNPAID", "PAID", "VOIDED"], default="UNPAID", type=str,
                                    help="Financial status of the invoice.")
         
-        reprocess_parser = subparsers.add_parser("reprocess", description="Reprocess an invoice", 
+        reprocess_parser = subparsers.add_parser("reprocess", description="Recalculate an invoice", 
                                                  help="Recalculates an invoice to reflect its new value. Use the dry-run flag to preview changes without saving to the database.")
         reprocess_parser.add_argument("-i", "--invoice", required=True, type=str, 
                                       help="Invoice number to reprocess.", dest="invoice")
         reprocess_parser.add_argument("-dr", "--dry-run", required=False, default=False, action="store_true",
                                       help="Dry Run: Use this flag to preview changes without saving them.", dest="dry_run")
-
-        args = parser.parse_args()
+        
+        if test_args:
+            args = parser.parse_args(test_args)
+        else:
+            args = parser.parse_args()
         result = vars(args)
 
         if args.job == "reprocess":
