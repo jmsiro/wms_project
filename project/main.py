@@ -22,20 +22,14 @@ if __name__ == "__main__":
         # If no account is specified, bill all
         if account:
             logger.info(f"Creating invoice for Account ID #{account} for period {year}-{month}")
-            billing.charge_customer(account_id=account, year=year, month=month, status=status)
+            billed = billing.charge_customer(account_id=account, year=year, month=month, status=status)
         else:
             logger.info(f"Creating invoices for all accounts for period {year}-{month}")
-            billing.charge_all(year=year, month=month)
-    
+            billed = billing.charge_all(year=year, month=month)
+
     if args["job"] == 'reprocess':
         reprocessor = BillReprocessor(db_instance)
         account, invoice, dry_run = args["account"], args["invoice"], args["dry_run"]
         msg = "Dry Run" if dry_run else "Commit changes"
         logger.info(f"Reprocessing invoice {invoice}.\nAccount Id # {account}\nMode: {msg}")
-
         reprocessed = reprocessor.reprocess_invoice(account_id=account, invoice_number=invoice, dry_run=dry_run)
-
-    if args["job"] == 'test':
-        logger.info("Running tests...")
-        
-        logger.info("Tests finished")

@@ -65,7 +65,7 @@ class BillReprocessor:
         # Initialize result 
         result = { "data": {
             "invoice_number": invoice.invoice_number, 
-            "current_amount": invoice.amount, 
+            "current_amount": float(invoice.amount), 
             "new_amount": None, 
             "difference": 0, 
             "national_shipments_difference": None,
@@ -89,7 +89,6 @@ class BillReprocessor:
             return {"data": None, "message": "No items found for invoice"} 
         
         invoice_shipments = self.db.get_invoice_amounts_by_type(invoice.id, session)
-
         # Calculate new amounts and difference, if dry_run is False update invoice items amounts
         amounts = self._calculate_amounts(invoice_shipments, invoice_items, current_rates, dry_run, invoice.status)
         difference = sum(amounts["new"].values()) - sum(amounts["current"].values())

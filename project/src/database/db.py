@@ -83,7 +83,8 @@ class DbInstance:
                 filter(Shipments.account_id == account_id, 
                        Shipments.created_at >= start_date, 
                        Shipments.created_at <= end_date).\
-                    group_by(func.date(Shipments.created_at), Shipments.country).all()
+                    group_by(func.date(Shipments.created_at), Shipments.country).\
+                        with_entities(func.date(Shipments.created_at), Shipments.country, func.count(Shipments.account_id)).all()
         return shipments_by_day
 
     def insert_invoice(self, session:sessionmaker, account_id:int, issued_at:datetime, shipments_amounts:dict, invoice_status:str="UNPAID") -> Invoices:
@@ -143,7 +144,8 @@ class DbInstance:
         shipment_type_case = case((InvoiceItems.description.like("%International%"), "INTERNATIONAL"), else_="NATIONAL")
         invoice_rates = session.query(shipment_type_case, func.sum(InvoiceItems.amount)/func.sum(InvoiceItems.quantity)).\
             filter(InvoiceItems.invoice_id == invoice_id).\
-                group_by(shipment_type_case).all()
+                group_by(shipment_type_case).\
+                    with_entities(shipment_type_case, func.sum(InvoiceItems.amount)/func.sum(InvoiceItems.quantity)).all()
         
         # Rates for each type of shipment
         invoice_rates = {rate[0]: float(rate[1]) for rate in invoice_rates}
@@ -161,17 +163,14 @@ class DbInstance:
 
     def get_invoice_amounts_by_type(self, invoice_id:int, session:sessionmaker) -> list:
         shipment_type_case = case((InvoiceItems.description.like("%International%"), "INTERNATIONAL"), else_="NATIONAL")
-        invoice_shipments = session.query(shipment_type_case, func.sum(InvoiceItems.amount)).filter(InvoiceItems.invoice_id == invoice_id).group_by(shipment_type_case).all()
+        invoice_shipments = session.query(shipment_type_case, func.sum(InvoiceItems.amount)).\
+            filter(InvoiceItems.invoice_id == invoice_id).\
+                group_by(shipment_type_case).\
+                    with_entities(shipment_type_case, func.sum(InvoiceItems.amount)).all()
         return invoice_shipments
     
     def get_accounts(self) -> list:
         session = self.get_session()
-        accounts = session.query(Accounts.id).all()
+        accounts = session.query(Accounts).with_entities(Accounts.id).all()
         self.close_session(session)
         return accounts
-
-    def get_account(self, account_id:int) -> Accounts:
-        session = self.get_session()
-        account = session.query(Accounts).filter(Accounts.id == account_id).first()
-        self.close_session(session)
-        return account
