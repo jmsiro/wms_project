@@ -99,7 +99,7 @@ class BillReprocessor:
 
         # Update invoice amount and result if dry_run is False
         if not dry_run and invoice.status == "UNPAID":
-            print("Updating invoice amount...")
+            logger.info(f"Updating invoice {invoice.invoice_number} with new amount of ${result['data']['new_amount']}")
             invoice.amount = sum(amounts["new"].values())
             result = self._response_handler(result, session)
             self.db.close_session(session)
