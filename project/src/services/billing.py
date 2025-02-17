@@ -12,18 +12,17 @@ class BillingService:
 
     def _insert_invoice(self, account_id:int, issued_at:datetime, shipments_amounts:dict, status:str="UNPAID", session:sessionmaker=None) -> dict:
         new_invoice = self.db.insert_invoice(session, account_id, issued_at, shipments_amounts, status)
-        
-        if type(new_invoice) == dict:
+        if new_invoice.get("message", None):
             return new_invoice
         
         invoice_data = {
             "data": {
                 "account_id": account_id, 
-                "id": new_invoice.id, 
-                "invoice_number": new_invoice.invoice_number, 
+                "id": new_invoice['id'], 
+                "invoice_number": new_invoice['invoice_number'], 
                 "status": status, 
                 "amount": sum(shipments_amounts.values()), 
-                "issued_date": new_invoice.issued_at
+                "issued_date": new_invoice["issued_at"]
                 }, 
             "message": "Invoice created"}
         
@@ -40,11 +39,8 @@ class BillingService:
                 q=quantity,
                 type=shipment_type,
                 session=session)
-            # Save item as dict removing the "_sa_instance_state" key that"s not needed
-            item_dict = new_invoice_item.__dict__.copy()
-            item_dict.pop("_sa_instance_state", None)
-            if item_dict.get("invoice_id", None) is not None:
-                items.append(item_dict)       
+            if new_invoice_item.get("invoice_id", None) is not None:
+                items.append(new_invoice_item)   
         return items
 
     def charge_customer(self, account_id, year:int, month:int, status:str=None, session:sessionmaker=None) -> dict:

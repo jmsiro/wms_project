@@ -87,7 +87,7 @@ class DbInstance:
                         with_entities(func.date(Shipments.created_at), Shipments.country, func.count(Shipments.account_id)).all()
         return shipments_by_day
 
-    def insert_invoice(self, session:sessionmaker, account_id:int, issued_at:datetime, shipments_amounts:dict, invoice_status:str="UNPAID") -> Invoices:
+    def insert_invoice(self, session:sessionmaker, account_id:int, issued_at:datetime, shipments_amounts:dict, invoice_status:str="UNPAID") -> dict:
 
         new_invoice = Invoices(
             account_id=account_id,
@@ -113,7 +113,8 @@ class DbInstance:
         session.query(Invoices).filter(Invoices.id == new_invoice.id).\
             update({Invoices.invoice_number: f"SH-{account_id}-{new_invoice.id}"})
         session.commit()
-        return new_invoice
+
+        return new_invoice.to_dict()
 
     def insert_invoice_items(self, invoice_id:int, rate:float, date:str, q:int, type:str, session:sessionmaker) -> InvoiceItems:
         new_invoice_item = InvoiceItems(
@@ -123,7 +124,8 @@ class DbInstance:
             unit_price=rate,
             amount=q * rate)
         session.add(new_invoice_item)
-        return new_invoice_item
+        session.commit()
+        return new_invoice_item.to_dict()
 
     def get_rates(self, account_id:int, session:sessionmaker) -> dict:
         

@@ -3,7 +3,12 @@ from sqlalchemy import Column, Integer, DateTime, VARCHAR, Enum, DECIMAL, Foreig
   
 Base = declarative_base() 
 
-class Accounts(Base):
+class MyBase(Base):
+    __abstract__ = True
+    def to_dict(self):
+        return {field.name:getattr(self, field.name) for field in self.__table__.c}
+
+class Accounts(MyBase):
     
     __tablename__ = 'accounts'
 
@@ -11,7 +16,7 @@ class Accounts(Base):
     account_name = Column(VARCHAR(45))
     created_at = Column(DateTime)
 
-class Shipments(Base):
+class Shipments(MyBase):
 
     __tablename__ = 'shipments'
 
@@ -21,7 +26,7 @@ class Shipments(Base):
     country = Column(VARCHAR(45))
     is_billed = Column(Integer)
 
-class Rates(Base):
+class Rates(MyBase):
 
     __tablename__ = 'rates'
 
@@ -32,7 +37,7 @@ class Rates(Base):
     created_at = Column(DateTime)
     updated_at = Column(DateTime)
 
-class Invoices(Base):
+class Invoices(MyBase):
 
     __tablename__ = 'invoices'
 
@@ -45,7 +50,7 @@ class Invoices(Base):
 
     __table_args__ = (PrimaryKeyConstraint("id", name="id_pk"), UniqueConstraint('account_id', 'issued_at', name='unique_invoice'))
 
-class InvoiceItems(Base):
+class InvoiceItems(MyBase):
 
     __tablename__ = 'invoice_items'
 
