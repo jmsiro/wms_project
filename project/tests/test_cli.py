@@ -62,4 +62,6 @@ class TestCliHandler(unittest.TestCase):
             """Wrong reprocess"""
             self.assertRaises(SystemExit, CliHandler().get_args, ["reprocess", "-i", "SH-1-1", "-dr2"])
 
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
         
