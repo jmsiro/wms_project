@@ -10,7 +10,7 @@ class BillReprocessor:
         self.db = db 
         self.test = test
 
-    def _calculate_amounts(self, invoice_shipments:list, invoice_items: list, current_rates: dict, dry_run:bool, invoice_status:str) -> dict:
+    def _calculate_amounts(self, invoice_shipments:list, invoice_items: list, current_rates: dict, dry_run:bool, invoice_status:str, session:sessionmaker) -> dict:
         # Initializing amounts to be compared
         amounts = {
             "current": {item[0]: float(item[1]) for item in invoice_shipments}, 
@@ -18,13 +18,14 @@ class BillReprocessor:
         }
         # Calculate new amounts using current rates
         for item in invoice_items:
-            shipment_type = "INTERNATIONAL" if "International" in item.description else "NATIONAL"
-            amounts["new"][shipment_type] += current_rates[shipment_type] * item.quantity
+            shipment_type = self.db.get_shipment_type_name(item.shipment_type_id, session)
+            shipment_type_name = shipment_type[0]
+            amounts["new"][shipment_type_name] += current_rates[shipment_type_name] * item.quantity
            
             # Update items data for "No Dry Run" & Unpaid invoices 
             if not dry_run and invoice_status == "UNPAID":
-                item.unit_price = current_rates[shipment_type]
-                item.amount = current_rates[shipment_type] * item.quantity
+                item.unit_price = current_rates[shipment_type_name]
+                item.amount = current_rates[shipment_type_name] * item.quantity
         return amounts
     
     def _response_handler(self, result:dict, session:sessionmaker) -> dict:
@@ -90,7 +91,7 @@ class BillReprocessor:
         
         invoice_shipments = self.db.get_invoice_amounts_by_type(invoice.id, session)
         # Calculate new amounts and difference, if dry_run is False update invoice items amounts
-        amounts = self._calculate_amounts(invoice_shipments, invoice_items, current_rates, dry_run, invoice.status)
+        amounts = self._calculate_amounts(invoice_shipments, invoice_items, current_rates, dry_run, invoice.status, session)
         difference = sum(amounts["new"].values()) - sum(amounts["current"].values())
         result["data"]["new_amount"] = sum(amounts["new"].values())
         result["data"]["difference"] = difference

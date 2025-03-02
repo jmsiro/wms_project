@@ -31,13 +31,16 @@ class BillingService:
     def _insert_invoice_items(self, invoice_id:int, shipments_quantity:dict, shipments_rates:dict, session:sessionmaker) -> list:
         items = []
         for shipments_date, shipments_country, quantity in shipments_quantity:
-            shipment_type = "NATIONAL" if shipments_country == "US" else "INTERNATIONAL"
+            name = "NATIONAL" if shipments_country == "US" else "INTERNATIONAL"
+            shipment_type = self.db.get_shipment_type_id(name, session)
+            shipment_type_id = shipment_type[0]
             new_invoice_item = self.db.insert_invoice_items(
-                invoice_id=invoice_id, 
-                rate=shipments_rates[shipment_type], 
+                invoice_id=invoice_id,
+                shipment_type_id=shipment_type_id,
+                rate=shipments_rates[name], 
                 date=shipments_date,
                 q=quantity,
-                type=shipment_type,
+                type=name,
                 session=session)
             if new_invoice_item.get("invoice_id", None) is not None:
                 items.append(new_invoice_item)   
