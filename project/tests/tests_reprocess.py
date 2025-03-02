@@ -71,6 +71,7 @@ class TestReprocessInvoice(unittest.TestCase):
         self.mock_db.get_rates.return_value = {'NATIONAL': 10.0, 'INTERNATIONAL': 40.0}
         self.mock_db.get_invoice_items.return_value = self.mock_invoice_items
         self.mock_db.get_invoice_amounts_by_type.return_value = [('NATIONAL', 140.0), ('INTERNATIONAL', 560.0)] 
+        self.mock_db.get_shipment_type_name.side_effect = [("NATIONAL",), ("INTERNATIONAL",), ("NATIONAL",), ("INTERNATIONAL",), ("NATIONAL",), ("INTERNATIONAL",), ("NATIONAL",), ("INTERNATIONAL",), ("NATIONAL",), ("INTERNATIONAL",), ("NATIONAL",), ("INTERNATIONAL",), ("NATIONAL",), ("INTERNATIONAL",)]
 
         result = self.bill_reprocessor.reprocess_invoice(account_id=1, invoice_number="SH-1-1", dry_run=False, session=self.mock_session)
 
