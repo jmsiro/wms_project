@@ -4,7 +4,7 @@ from sqlalchemy import create_engine, func, case
 from sqlalchemy.sql import exists
 from sqlalchemy.exc import IntegrityError as sqlalchemyIntegrityError
 from pymysql.err import IntegrityError as pymysqlIntegrityError
-from ..models.models import Shipments, Rates, Invoices, InvoiceItems, Accounts
+from ..models.models import Shipments, Rates, Invoices, InvoiceItems, Accounts, ShipmentTypes
 from ..logs.logs import logger
 
 logger = logger.getLogger("DATABASE")
@@ -60,11 +60,13 @@ class DbInstance:
         return account
     
     def get_shipments_quantity(self, account_id:int, start_date:datetime, end_date:datetime, session:sessionmaker) -> dict:
+        # USA shipments
         national_shipments = session.query(Shipments.country)\
             .filter(Shipments.account_id == account_id,
                     Shipments.country == "US",
                     Shipments.created_at >= start_date,
                     Shipments.created_at <= end_date).count()
+        # Every other country
         international_shipments = session.query(Shipments.country)\
             .filter(Shipments.account_id == account_id,
                     Shipments.country != "US",
@@ -116,9 +118,10 @@ class DbInstance:
 
         return new_invoice.to_dict()
 
-    def insert_invoice_items(self, invoice_id:int, rate:float, date:str, q:int, type:str, session:sessionmaker) -> InvoiceItems:
+    def insert_invoice_items(self, invoice_id:int, shipment_type_id:int,rate:float, date:str, q:int, type:str, session:sessionmaker) -> InvoiceItems:
         new_invoice_item = InvoiceItems(
             invoice_id=invoice_id,
+            shipment_type_id=shipment_type_id,
             description=f"National shipments of {date}" if type == "NATIONAL" else f"International shipment of {date}",
             quantity=q,
             unit_price=rate,
@@ -131,12 +134,14 @@ class DbInstance:
         
         if session.query(exists().where(Rates.account_id == account_id)).scalar():
             current_rates = session.query(Rates).\
-                filter(Rates.account_id == account_id).\
-                    with_entities(Rates.shipment_type, Rates.price).all()
+                join(ShipmentTypes, Rates.shipment_type_id == ShipmentTypes.id).\
+                    filter(Rates.account_id == account_id).\
+                        with_entities(ShipmentTypes.name, Rates.price).all()
         else:
             current_rates = session.query(Rates).\
-                filter(Rates.account_id.is_(None)).\
-                    with_entities(Rates.shipment_type, Rates.price).all()
+                join(ShipmentTypes, Rates.shipment_type_id == ShipmentTypes.id).\
+                    filter(Rates.account_id.is_(None)).\
+                        with_entities(ShipmentTypes.name, Rates.price).all()
         
         # Rates for each type of shipment
         current_rates = {rate[0]: float(rate[1]) for rate in current_rates}
@@ -164,11 +169,11 @@ class DbInstance:
         return invoice_items
 
     def get_invoice_amounts_by_type(self, invoice_id:int, session:sessionmaker) -> list:
-        shipment_type_case = case((InvoiceItems.description.like("%International%"), "INTERNATIONAL"), else_="NATIONAL")
-        invoice_shipments = session.query(shipment_type_case, func.sum(InvoiceItems.amount)).\
+        invoice_shipments = session.query(ShipmentTypes.name, func.sum(InvoiceItems.amount)).\
+            join(ShipmentTypes, InvoiceItems.shipment_type_id == ShipmentTypes.id).\
             filter(InvoiceItems.invoice_id == invoice_id).\
-                group_by(shipment_type_case).\
-                    with_entities(shipment_type_case, func.sum(InvoiceItems.amount)).all()
+                group_by(ShipmentTypes.name).\
+                    with_entities(ShipmentTypes.name, func.sum(InvoiceItems.amount)).all()
         return invoice_shipments
     
     def get_accounts(self) -> list:
@@ -176,3 +181,11 @@ class DbInstance:
         accounts = session.query(Accounts).with_entities(Accounts.id).all()
         self.close_session(session)
         return accounts
+    
+    def get_shipment_type_id(self, name:str, session:sessionmaker) -> int:
+        shipment_type = session.query(ShipmentTypes).filter(ShipmentTypes.name == name).with_entities(ShipmentTypes.id).first()
+        return shipment_type
+    
+    def get_shipment_type_name(self, id:int, session:sessionmaker) -> str:
+        shipment_type = session.query(ShipmentTypes).filter(ShipmentTypes.id == id).with_entities(ShipmentTypes.name).first()
+        return shipment_type
