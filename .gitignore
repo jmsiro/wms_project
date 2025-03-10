@@ -1,0 +1,4 @@
+config.ini
+*.pyc
+docker_db/data/*
+secrets/*

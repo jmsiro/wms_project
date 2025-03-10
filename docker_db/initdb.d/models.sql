@@ -1,3 +1,7 @@
+CREATE DATABASE IF NOT EXISTS testsh;
+CREATE DATABASE IF NOT EXISTS testsh_dev;
+USE testsh;
+
 create table accounts
 (
     id                                 int auto_increment            primary key,
