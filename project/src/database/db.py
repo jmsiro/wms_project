@@ -15,11 +15,11 @@ class DbInstance:
         self.connection = None
         self.transaction = None
         if self.test:
+            # Legacy, used for mocked tests (deprecated)
             logger.info("Test - No database parameters provided")
         else:
             try:
                 self.engine = create_engine(con_str)
-                print("Database connected", con_str)
                 logger.info("Database connected")
             except Exception as e:
                 logger.error("Error connecting to database:\n" + e.__str__())

@@ -3,5 +3,5 @@ secrets/*
 config.ini
 docker_db/data/*
 docker_redis/data/*
-project/tests/tests_billing.py
-project/tests/tests_reprocess.py
+project/tests/mock_billing.py
+project/tests/mock_reprocess.py
