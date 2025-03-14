@@ -1,6 +1,6 @@
-# ShipHero Project
+# Project
 
-- [ShipHero Project](#shiphero-project)
+- [Project](#project)
   - [Project Overview](#project-overview)
   - [Features](#features)
   - [Requirements](#requirements)
@@ -26,7 +26,7 @@
     - [Test Database](#test-database)
 
 ## Project Overview
-This project is a billing system for ShipHero, designed to handle customers invoicing and reprocessing. It is is a command-line application built with Python and SQLAlchemy and interacts with a MySQL database.
+This project is a billing system for a Warehouse Management System, designed to handle customers invoicing and reprocessing. It is is a command-line application built with Python and SQLAlchemy and interacts with a MySQL database.
 
 ## Features
 The system provides three core functionalities:

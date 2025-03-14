@@ -27,7 +27,7 @@ class CliHandler():
         month_input = end_date.month
 
         parser = argparse.ArgumentParser(
-            prog="ShipHero Billing System",
+            prog="WMS Billing System",
             formatter_class=argparse.RawDescriptionHelpFormatter,
             description="Charge or reprocess customers invoices.",
             epilog="Usage examples:\n\

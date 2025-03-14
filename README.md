@@ -1,6 +1,6 @@
-# ShipHero Backend Take Home Project
+# Backend Project
 
-ShipHero WMS is a fully featured Warehouse Management System designed for DTC brands and 3PL providers running their own warehouse and shipping operations.
+WMS is a fully featured Warehouse Management System designed for DTC brands and 3PL providers running their own warehouse and shipping operations.
 The goal of this project is to write two jobs described in the Requirements section.
 
 ## Before you start working on the project please read these recommendations:
@@ -17,8 +17,8 @@ NOTE: If AI is suspected/used, candidate will be immediately disqualified from c
 ## Requirements
 
 
-### As ShipHero, I’d like to charge my customers for their shipping operations, so my business is profitable
-ShipHero customers ship national and international orders. At the beginning of each month, we must generate an invoice to charge them for their shipping operations.
+### Charge my customers for their shipping operations, so my business is profitable
+Customers ship national and international orders. At the beginning of each month, we must generate an invoice to charge them for their shipping operations.
 
 We must support shipment default rates, AND specific customers could have their own rates.
 Invoices could have three different statuses: UNPAID, PAID, and VOIDED. The default status of an invoice is UNPAID.
@@ -44,7 +44,7 @@ The invoice must show:
 
 Acceptance criteria: once this process has been completed, we expect to have the data in the database to generate an invoice file to send to the customers. Note: It’s out of the scope of this requirement to generate an invoice file.
 
-### As ShipHero, I’d like to be able to reprocess invoices, so I can amend incorrect charges
+### I’d like to be able to reprocess invoices, so I can amend incorrect charges
 Rates could change depending on the time of the year. Partners such as USPS, Fedex, and Canada Post provide these rates. Sometimes, our finance team receives these rates late, and invoices are generated with outdated rates.
 
 We need a mechanism to reprocess invoices. Since we usually want to validate differences between invoices before updating the invoice, it must provide a dry run feature that should work the following way
