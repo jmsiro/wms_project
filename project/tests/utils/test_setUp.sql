@@ -141,7 +141,7 @@ create  table shipment_types
     name                     		   varchar(40)                   not null
 )
     charset = utf8mb3;
-
+    
 insert into shipment_types (name) values
 ('NATIONAL'),
 ('INTERNATIONAL');
@@ -165,12 +165,12 @@ insert into rates (account_id, shipment_type_id, price, created_at) values
 
 create table invoices
 (
-    id                                 int auto_increment               primary key,
-    account_id                         int                              not null,
-    issued_at                          datetime                         not null,
-    invoice_number                     varchar(128)                     not null,
-    status                             enum('UNPAID', 'PAID', 'VOIDED') not null,
-    amount                             decimal(9, 2)                    not null
+    id                                 int auto_increment            primary key,
+    account_id                         int                           not null,
+    issued_at                          datetime                      not null,
+    invoice_number                     varchar(128)                  not null,
+    status                             enum('UNPAID', 'PAID', 'VOIDED')  not null,
+    amount                             decimal(9, 2)                 not null
 )
     charset = utf8mb3;
 

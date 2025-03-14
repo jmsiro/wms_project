@@ -11,7 +11,7 @@ class RatesService:
     def __init__(self, db: DbInstance, test:bool=False):
         self.db = db
         self.test = test
-        self.redis_host = os.environ.get("REDIS_HOST", "localhost") 
+        self.redis_host = os.environ.get("REDIS_HOST", "project_redis") 
         self.redis_port = int(os.environ.get("REDIS_PORT", 6379))
         self.redis_client = redis.Redis(host=self.redis_host, port=self.redis_port)
 
