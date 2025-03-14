@@ -147,7 +147,16 @@ class DbInstance:
         # Rates for each type of shipment
         current_rates = {rate[0]: float(rate[1]) for rate in current_rates}
         return current_rates
-    
+
+    def create_update_rates(self, account_id:int, shipment_type_id:int, rate:float, session:sessionmaker) -> dict:
+        session.query(Rates).\
+            where(Rates.account_id == account_id).\
+                where(Rates.shipment_type_id == shipment_type_id).\
+                    update({'price': rate, 'updated_at':datetime.now()})
+        session.commit()
+        rates = self.get_rates(account_id, session)
+        return rates
+        
     def get_invoice_rates(self, invoice_id:str, session:sessionmaker) -> list:
         shipment_type_case = case((InvoiceItems.description.like("%International%"), "INTERNATIONAL"), else_="NATIONAL")
         invoice_rates = session.query(shipment_type_case, func.sum(InvoiceItems.amount)/func.sum(InvoiceItems.quantity)).\

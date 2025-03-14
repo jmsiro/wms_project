@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, DateTime, VARCHAR, Enum, DECIMAL, ForeignKey, PrimaryKeyConstraint, UniqueConstraint
   
@@ -14,7 +15,7 @@ class Accounts(MyBase):
 
     id = Column(Integer, primary_key=True)
     account_name = Column(VARCHAR(45))
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
 
 class Shipments(MyBase):
 
@@ -38,11 +39,11 @@ class Rates(MyBase):
     __tablename__ = 'rates'
 
     id = Column(Integer, primary_key=True)
-    account_id = Column(Integer, ForeignKey('accounts.id'))
+    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)
     shipment_type_id = Column(Integer, ForeignKey('shipment_types.id'))
     price = Column(DECIMAL(4,2))
-    created_at = Column(DateTime)
-    updated_at = Column(DateTime)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
 
 class Invoices(MyBase):
 

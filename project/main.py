@@ -4,6 +4,7 @@ from src.database import db
 from src.utils.cli_handler import CliHandler
 from src.services.billing import BillingService
 from src.services.reprocess import BillReprocessor
+from src.services.rates import RatesService
 
 if __name__ == "__main__":
 
@@ -33,3 +34,13 @@ if __name__ == "__main__":
         msg = "Dry Run" if dry_run else "Commit changes"
         logger.info(f"Reprocessing invoice {invoice}.\nAccount Id # {account}\nMode: {msg}")
         reprocessed = reprocessor.reprocess_invoice(account_id=account, invoice_number=invoice, dry_run=dry_run)
+
+    if args["job"] == 'rates':
+        rates = RatesService(db_instance)
+        account, national, international, update_create = args["account"], args["national"], args["international"], args["update_create"]
+        if update_create:
+            logger.info(f"Updating rates for Account ID #{account}")
+            rates = rates.create_update_rates(account_id=account, national=national, international=international)
+        else:
+            logger.info(f"Getting rates for Account ID #{account}")
+            rates = rates.get_rates(account_id=account)

@@ -1,5 +1,6 @@
 from ..logs.logs import logger
 from ..database.db import DbInstance
+from .rates import RatesService
 from datetime import datetime, timedelta
 from sqlalchemy.orm import sessionmaker
 
@@ -76,7 +77,7 @@ class BillReprocessor:
 
         # Compare current rates with invoice rates
         invoice_rates = self.db.get_invoice_rates(invoice.id, session)
-        current_rates = self.db.get_rates(account_id, session)
+        current_rates = RatesService(self.db).get_rates(account_id, session)
         rates_difference = {rate: current_rates[rate] - invoice_rates[rate] for rate in invoice_rates}
         if all(val == 0 for val in rates_difference.values()):
             logger.info(f"No difference found in rates for invoice {invoice.invoice_number}")

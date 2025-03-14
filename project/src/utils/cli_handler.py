@@ -57,6 +57,17 @@ class CliHandler():
         reprocess_parser.add_argument("-dr", "--dry-run", required=False, default=False, action="store_true",
                                       help="Dry Run: Use this flag to preview changes without saving them.", dest="dry_run")
         
+        rates_parser = subparsers.add_parser("rates", description="Get of modify rates for an account",
+                                                help="Get or modify rates for an account.")
+        rates_parser.add_argument("-a", "--account", required=False, type=int,
+                                  help="Account Id.", dest="account")
+        rates_parser.add_argument("-n", "--national", required=False, type=float,
+                                  help="National rate.", dest="national")
+        rates_parser.add_argument("-i", "--international", required=False, type=float,
+                                  help="International rate.", dest="international")
+        rates_parser.add_argument("-uc", "--update-create", required=False, action="store_true",
+                                  help="Update or create rates for the account.", dest="update_create")
+
         if test_args:
             args = parser.parse_args(test_args)
         else:
@@ -67,8 +78,13 @@ class CliHandler():
             match = re.match(r'^SH-\d+-\d+$', result["invoice"])
             if not match:
                 logger.error("Invalid invoice number. Exiting...")
+                parser.error("Invalid invoice number.")
                 exit(1)
             result['account'] = match.string.split('-')[1]
-
+        if args.job == "rates":
+            if result["update_create"] and (result["national"] is None or result["international"] is None):
+                logger.error("National or International rates are required to update or create rates. Exiting...")
+                parser.error("National or International rates are required to update or create rates.")
+                exit(1)
         return result
             

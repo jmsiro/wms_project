@@ -1,5 +1,6 @@
 from ..logs.logs import logger
 from ..database.db import DbInstance
+from .rates import RatesService
 from datetime import datetime, timedelta
 from sqlalchemy.orm import sessionmaker
 
@@ -80,7 +81,7 @@ class BillingService:
         # Shipments for the account_id between dates grouped by day and country
         shipments_by_day = self.db.get_shipments_by_day(account_id, start_date, end_date, session)
         # Current rates for the account_id or the default rates if the account_id has no rates
-        shipments_rates =  self.db.get_rates(account_id, session)
+        shipments_rates =  RatesService(self.db).get_rates(account_id, session)
 
         if shipments_quantity["NATIONAL"] == 0 and shipments_quantity["INTERNATIONAL"] == 0:
             logger.info(f"No shipments to charge for Account Id # {account_id} in {start_date.strftime("%B %d, %Y")} - {end_date.strftime("%B %d, %Y")}")
